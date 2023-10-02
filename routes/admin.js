@@ -20,6 +20,38 @@ const createUserValidation = [
         .withMessage('La contraseña debe tener al menos 8 caracteres')
 ];
 
+/**
+ * @swagger
+ * /api/admin/create-user:
+ *   post:
+ *     tags:
+ *       - Admin
+ *     description: Crea un nuevo usuario (Solo para administradores)
+ *     parameters:
+ *       - name: name
+ *         description: Nombre del usuario
+ *         in: formData
+ *         required: true
+ *         type: string
+ *       - name: email
+ *         description: Correo electrónico del usuario
+ *         in: formData
+ *         required: true
+ *         type: string
+ *       - name: password
+ *         description: Contraseña del usuario
+ *         in: formData
+ *         required: true
+ *         type: string
+ *     responses:
+ *       '201':
+ *         description: Usuario creado con éxito
+ *       '400':
+ *         description: Datos inválidos o insuficientes
+ *       '401':
+ *         description: No autorizado
+ */
+
 router.post(
     '/create-user',
     requireRole('admin'), // Middleware para verificar el rol de admin
@@ -30,5 +62,6 @@ router.post(
 // Aquí puedes añadir más rutas administrativas y validaciones, si lo necesitas.
 
 module.exports = router;
+
 
 
