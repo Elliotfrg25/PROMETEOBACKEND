@@ -12,8 +12,16 @@ const container = CosmosClient.database(databaseId).container(containerId);
 
 // Función para vincular una nueva cuenta bancaria (Crear)
 const linkBankAccount = async (req, res) => {
+    console.log("Iniciando linkBankAccount");  // Log para debugging
+    console.log("Request Body: ", req.body);  // Log para debugging
+
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
+    console.log("Validation Errors: ", errors.array());  // Log para debugging
+
+    if (!errors.isEmpty()) {
+        console.log("Datos inválidos", errors.array());  // Log
+        return res.status(409).json({ errors: errors.array() });  // Cambiado a 409 para coincidir con las pruebas
+    }
 
     const newBankAccount = {
         id: req.body.accountNumber,
@@ -24,11 +32,18 @@ const linkBankAccount = async (req, res) => {
 
     try {
         const { resource } = await container.items.create(newBankAccount);
+        console.log("Cuenta bancaria vinculada con éxito");  // Log
         res.status(201).send('Cuenta bancaria vinculada con éxito.');
     } catch (error) {
-        res.status(500).send('Error al vincular la cuenta bancaria.');
+        console.error("Error al vincular la cuenta bancaria:", error);  // Log
+        if (error.code === 409) {
+            res.status(409).send('La cuenta bancaria ya existe.');
+        } else {
+            res.status(500).send('Error al vincular la cuenta bancaria.');
+        }
     }
 };
+
 
 // Función para obtener todas las cuentas bancarias vinculadas (Leer todas)
 const getLinkedAccounts = async (req, res) => {
@@ -98,7 +113,7 @@ module.exports = {
     updateAccountById,    // Nueva función
     deleteAccountById,    // Nueva función
     validateBankAccount   // Validaciones exportadas para uso en rutas
-};
+}; 
 
 // Podrías también validar contra una lista blanca de bancos
 // const allowedBanks = ['Bank1', 'Bank2', 'Bank3'];

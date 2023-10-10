@@ -196,7 +196,9 @@ module.exports = {
     createExchangeRate,
     updateExchangeRate,
     deleteExchangeRate,
-    validateCurrencyConversion
-};
+    validateCurrencyConversion,
+    fetchExchangeRate,
+    updateDailyExchangeRates
+}; 
 
  

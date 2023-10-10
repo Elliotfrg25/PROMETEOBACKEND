@@ -1,4 +1,4 @@
-//settingsController.js
+// settingsController.js
 
 // Importaciones necesarias
 const { CosmosClient } = require('../db');
@@ -21,31 +21,30 @@ const validateSettings = [
 
 // Función para obtener las configuraciones del usuario
 const getSettings = async (req, res) => {
-    // Obtener el ID del usuario desde el request (asumo que se guarda en req.userId)
+    console.log("Entrando a la función getSettings");
     const userId = req.userId;
+    console.log(`UserID: ${userId}`);
 
-    // Crear la consulta para CosmosDB
     const querySpec = {
         query: 'SELECT * FROM Usuarios u WHERE u.id = @id',
         parameters: [{ name: '@id', value: userId }],
     };
 
-    // Ejecutar la consulta
-    const { resources } = await container.items.query(querySpec).fetchAll();
+    try {
+        console.log("Intentando consultar la base de datos");
+        const { resources } = await container.items.query(querySpec).fetchAll();
+        console.log(`Recursos obtenidos: ${JSON.stringify(resources)}`);
 
-    // Obtener el primer usuario que coincida (debería ser único)
-    const user = resources[0];
-
-    // Verificar si el usuario existe
-    if (!user) {
-        return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+        const user = resources[0];
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+        }
+        res.status(200).json({ success: true, settings: user.settings || {} });
+    } catch (error) {
+        console.error("Error al consultar la base de datos: ", error);
+        res.status(500).json({ success: false, message: 'Error al obtener las configuraciones' });
     }
-
-    // Devolver las configuraciones del usuario
-    // Si no hay configuraciones almacenadas, se devuelve un objeto vacío {}
-    res.status(200).json({ success: true, settings: user.settings || {} });
 };
-
 
 // Función para actualizar las configuraciones del usuario
 const updateSettings = async (req, res) => {
@@ -116,5 +115,7 @@ module.exports = {
     deleteSettings,
     validateSettings
 };
+
+
  
 

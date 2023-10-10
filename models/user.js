@@ -79,7 +79,7 @@ exports.authenticateUser = async (email, password) => {
 
     // Devolver null si la autenticación falla
     return null;
-};
+}; 
 
 
 
