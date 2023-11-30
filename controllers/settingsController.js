@@ -5,9 +5,12 @@ const { CosmosClient } = require('../db');
 const { validationResult, check } = require('express-validator');
 
 // Configuración de CosmosDB
-const databaseId = 'ToDoList';
-const containerId = 'Items';
+const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
+const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
+
+// Resto de tu configuración
 const container = CosmosClient.database(databaseId).container(containerId);
+
 
 // Validaciones para los campos de configuración
 const validateSettings = [

@@ -7,9 +7,12 @@ const emailService = require('../services/emailService');
 const smsService = require('../services/smsService'); 
 
 // Configuración de CosmosDB
-const databaseId = 'ToDoList';
-const containerId = 'Items';
+const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
+const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
+
+// Resto de tu configuración
 const container = CosmosClient.database(databaseId).container(containerId);
+
 
 // Función para obtener la tasa de cambio entre dos monedas (esto es solo un ejemplo)
 const getExchangeRate = async (fromCurrency, toCurrency) => {

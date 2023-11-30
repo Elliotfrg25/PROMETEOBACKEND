@@ -6,9 +6,12 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 
 // Configuración de CosmosDB
-const databaseId = 'ToDoList';
-const containerId = 'Items';
+const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
+const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
+
+// Resto de tu configuración
 const container = CosmosClient.database(databaseId).container(containerId);
+
 
 // Función para vincular una nueva cuenta bancaria (Crear)
 const linkBankAccount = async (req, res) => {

@@ -3,10 +3,13 @@
 // Importar el cliente de CosmosDB
 const { CosmosClient } = require('../db');
 
-// Configuración de CosmosDB según tu archivo de controladores
-const databaseId = 'ToDoList';  // Cambiado a tu configuración actual
-const containerId = 'Items';  // Cambiado a tu configuración actual
+// Configuración de CosmosDB
+const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
+const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
+
+// Resto de tu configuración
 const container = CosmosClient.database(databaseId).container(containerId);
+
 
 // Método para crear una nueva transacción
 exports.createTransaction = async (transaction) => {

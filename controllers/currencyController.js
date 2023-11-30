@@ -7,10 +7,13 @@ const { CosmosClient } = require('../db');
 const { body, validationResult } = require('express-validator');
 const axios = require('axios');
 
-// Configurar la base de datos de CosmosDB
-const databaseId = 'ToDoList';
-const containerId = 'Items';
+// Configuración de CosmosDB
+const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
+const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
+
+// Resto de tu configuración
 const container = CosmosClient.database(databaseId).container(containerId);
+
 
 // Función para obtener la tasa de cambio desde una API externa
 const fetchExchangeRate = async (fromCurrency, toCurrency) => {

@@ -10,12 +10,13 @@ if (!CosmosClient) {
     process.exit(1); // Finalizar el proceso si CosmosClient no está definido
 }
 
-// Configuración de CosmosDB con tus datos reales
-const databaseId = 'ToDoList';
-const containerId = 'Items';
+// Configuración de CosmosDB
+const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
+const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
 
-// Acceder a la base de datos y al contenedor
+// Resto de tu configuración
 const container = CosmosClient.database(databaseId).container(containerId);
+
 
 // Función para crear un nuevo usuario con validaciones adicionales
 exports.createUser = async (user) => {

@@ -7,9 +7,12 @@ const bcrypt = require('bcrypt'); // Para el hash de las contraseñas
 const { validationResult } = require('express-validator'); // Para validar el cuerpo de la petición
 
 // Configuración de CosmosDB
-const databaseId = 'ToDoList';
-const containerId = 'Items';
+const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
+const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
+
+// Resto de tu configuración
 const container = CosmosClient.database(databaseId).container(containerId);
+
 
 // Función para verificar si un ID ya existe en la base de datos
 const checkIfIdExists = async (idToCheck) => {
