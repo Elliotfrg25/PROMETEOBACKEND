@@ -1,34 +1,36 @@
 // middleware/authorization.js
 
-const { findUserById } = require('../models/user');  // Importar la función desde tu modelo de usuario
+const { findUserById } = require('../models/user');
 
-// Middleware para requerir ciertos roles para acceder a una ruta
 exports.requireRole = (...requiredRoles) => {
     return async (req, res, next) => {
-        let userRole = req.userRole;  // Obtener el rol del token JWT
+        console.log('Iniciando la verificación del rol del usuario');
+        let userRole = req.userRole;
 
-        // Si el rol no está en el token, buscarlo en la base de datos
         if (!userRole) {
             try {
+                console.log('Buscando rol del usuario en la base de datos');
                 const user = await findUserById(req.userId);
                 if (!user) {
+                    console.log('Usuario no encontrado');
                     return res.status(404).json({ message: 'Usuario no encontrado.' });
                 }
-                userRole = user.role;  // Asumiendo que 'role' es un campo en tu modelo de usuario
+                userRole = user.role;
             } catch (error) {
-                console.error("Error al buscar el usuario:", error);
+                console.error('Error al buscar el usuario:', error);
                 return res.status(500).json({ message: 'Error interno del servidor.' });
             }
         }
 
-        // Verificar si el rol del usuario está en los roles requeridos
         if (!requiredRoles.includes(userRole)) {
+            console.log('El usuario no tiene permiso para realizar esta acción');
             return res.status(403).json({ message: 'No tienes permiso para realizar esta acción.' });
         }
 
-        next();  // Si todo está bien, continuar con el siguiente middleware o ruta
+        console.log('Verificación de rol completada con éxito');
+        next();
     };
-}; 
+};
 
 
 

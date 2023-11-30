@@ -117,6 +117,6 @@ router.put('/linked/:id', updateAccountById); // Nueva ruta
 // Ruta para eliminar una cuenta bancaria específica por ID
 router.delete('/linked/:id', deleteAccountById); // Nueva ruta
 
-module.exports = router;
+module.exports = router; 
 
 

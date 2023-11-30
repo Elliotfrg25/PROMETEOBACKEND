@@ -7,27 +7,34 @@ require('dotenv').config();
 const endpoint = process.env.COSMOS_DB_ENDPOINT;
 const key = process.env.COSMOS_DB_KEY;
 
-// Imprimir las variables para depuración.
-console.log("Endpoint:", endpoint);
-console.log("Key:", key);
+// LOG: Verificando la presencia de variables de entorno
+console.log('Verificando variables de entorno para la conexión a CosmosDB');
 
 // Comprobar si las variables de entorno están definidas.
 if (!endpoint || !key) {
+    // LOG: Error de configuración
+    console.error('COSMOS_DB_ENDPOINT y COSMOS_DB_KEY deben estar definidos');
     throw new Error("COSMOS_DB_ENDPOINT and COSMOS_DB_KEY must be defined.");
 }
+
+// LOG: Variables de entorno correctas, procediendo a la conexión
+console.log('Variables de entorno correctas, procediendo a la conexión');
 
 // Importar el cliente CosmosDB de la biblioteca de Azure.
 const { CosmosClient } = require('@azure/cosmos');
 
+// LOG: Inicializando el cliente de CosmosDB
+console.log('Inicializando el cliente de CosmosDB');
+
 // Inicializar el cliente de CosmosDB con los datos de conexión.
 const client = new CosmosClient({ endpoint, key });
 
-// Mostrar el objeto del cliente en la consola para fines de depuración.
-console.log("CosmosClient:", client);
+// LOG: Cliente de CosmosDB inicializado
+console.log('Cliente de CosmosDB inicializado exitosamente');
 
 // Exportar el cliente para que pueda ser utilizado en otros archivos del proyecto.
-
 module.exports = { CosmosClient: client };
+
 
 // Función para probar la conexión a la base de datos.
 // Esta función ha sido comentada para evitar su ejecución automática.
@@ -62,7 +69,7 @@ async function testConnection() {
 // Descomentar la siguiente línea para ejecutar la prueba de conexión.
 // testConnection();
 */
-
+ 
 
 
 

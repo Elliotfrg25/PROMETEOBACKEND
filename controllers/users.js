@@ -13,6 +13,9 @@ const container = CosmosClient.database(databaseId).container(containerId);
 
 // Función para verificar si un ID ya existe en la base de datos
 const checkIfIdExists = async (idToCheck) => {
+    // LOG: Añadiendo logging aquí
+    console.log(`Verificando si el ID ${idToCheck} ya existe`);
+
     const querySpec = {
         query: "SELECT * from c WHERE c.id = @id",
         parameters: [
@@ -43,33 +46,35 @@ const authenticateUser = async (req, res, next) => {
 
 // Función para registrar usuarios
 const register = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        res.status(422).json({ errors: errors.array() });
-        throw new Error('Datos inválidos.');
-    }
-
-    const idExists = await checkIfIdExists(req.body.email);
-    if (idExists) {
-        res.status(400).send("ID ya existe");
-        throw new Error('ID ya existe.');
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
-
-    const newUser = {
-        id: req.body.email,
-        email: req.body.email,
-        password: hashedPassword
-    };
-
     try {
+        // LOG: Añadiendo logging aquí
+        console.log('Intento de registro de usuario');
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            console.log(`Entrando al bloque de errores de validación: ${JSON.stringify(errors.array())}`);
+            return res.status(422).json({ errors: errors.array() });
+        }
+
+        const idExists = await checkIfIdExists(req.body.email);
+        if (idExists) {
+            return res.status(400).send("ID ya existe");
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+        const newUser = {
+            id: req.body.email,
+            email: req.body.email,
+            password: hashedPassword
+        };
+
         const { resource } = await container.items.create(newUser);
-        res.status(201).send('Usuario registrado con éxito.');
+        return res.status(201).send('Usuario registrado con éxito.');
     } catch (error) {
-        console.log("Error en registro: ", error);
-        res.status(500).send('Error al registrar usuario.');
+        console.log(`Error inesperado en el registro: ${error}`);
+        return res.status(500).send('Error inesperado.');
     }
 };
 
@@ -77,6 +82,9 @@ const register = async (req, res) => {
 const getUserById = async (req, res) => {
     const { id } = req.params;
     try {
+        // LOG: Añadiendo logging aquí
+        console.log(`Leyendo usuario con ID ${id}`);
+
         const { resource } = await container.item(id).read();
         res.status(200).json(resource);
     } catch (error) {
@@ -88,8 +96,10 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email } = req.body;
-
     try {
+        // LOG: Añadiendo logging aquí
+        console.log(`Actualizando usuario con ID ${id}`);
+
         const { resource } = await container.item(id).replace({ id, name, email });
         res.status(200).json(resource);
     } catch (error) {
@@ -101,6 +111,9 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     const { id } = req.params;
     try {
+        // LOG: Añadiendo logging aquí
+        console.log(`Eliminando usuario con ID ${id}`);
+
         await container.item(id).delete();
         res.status(204).json({});
     } catch (error) {
@@ -110,8 +123,8 @@ const deleteUser = async (req, res) => {
 
 // Función para obtener el perfil del usuario
 const getProfile = async (req, res) => {
-    const userId = req.user._id;
-
+    console.log('Obteniendo perfil del usuario');
+    const userId = req.user.id; // Usar req.user.id en lugar de req.userId
     try {
         const { resource } = await container.item(userId).read();
         res.status(200).send(resource);
@@ -120,33 +133,40 @@ const getProfile = async (req, res) => {
     }
 };
 
+
 // Función para iniciar sesión
 const login = async (req, res) => {
+    console.log('Intento de inicio de sesión');
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-
     try {
         const { resource } = await container.item(req.body.email).read();
         const user = resource;
-
         const validPassword = await bcrypt.compare(req.body.password, user.password);
         if (!validPassword) return res.status(400).send('Contraseña incorrecta.');
-
         const token = jwt.sign({ _id: user.id }, process.env.SECRET_KEY);
         res.send({ token });
     } catch (error) {
+        console.log(`Error inesperado en el inicio de sesión: ${error}`);
         res.status(500).send('Error al iniciar sesión.');
     }
 };
 
 // Exportar las funciones para su uso en otros archivos
 module.exports = {
-    authenticateUser,
     register,
+    authenticateUser,
     getProfile,
     login,
     getUserById,
     updateUser,
     deleteUser
 };
+
+
+
+
+
+
+
 

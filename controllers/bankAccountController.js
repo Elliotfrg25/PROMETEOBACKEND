@@ -12,15 +12,27 @@ const container = CosmosClient.database(databaseId).container(containerId);
 
 // Función para vincular una nueva cuenta bancaria (Crear)
 const linkBankAccount = async (req, res) => {
-    console.log("Iniciando linkBankAccount");  // Log para debugging
-    console.log("Request Body: ", req.body);  // Log para debugging
+    console.log("Iniciando linkBankAccount");
+    console.log("Request Body: ", req.body);
 
     const errors = validationResult(req);
-    console.log("Validation Errors: ", errors.array());  // Log para debugging
+    console.log("Validation Errors: ", errors.array());
 
     if (!errors.isEmpty()) {
-        console.log("Datos inválidos", errors.array());  // Log
-        return res.status(409).json({ errors: errors.array() });  // Cambiado a 409 para coincidir con las pruebas
+        console.log("Datos inválidos", errors.array());
+        return res.status(422).json({ errors: errors.array() }); // 422 Unprocessable Entity
+    }
+
+    // Ajusta estos números según tus necesidades
+    if (!req.body.bankName || req.body.accountNumber.length < 10 || req.body.accountNumber.length > 13) {
+        console.log("Datos inválidos: Verificación adicional");
+        return res.status(409).json({ errors: "Datos inválidos en la verificación adicional" }); // 400 Bad Request
+    }
+
+    // Asegúrate de que req.user._id está disponible y es válido
+    if (!req.user || !req.user._id) {
+        console.log("Usuario no identificado");
+        return res.status(401).json({ errors: "Usuario no identificado" }); // 401 Unauthorized
     }
 
     const newBankAccount = {
@@ -32,10 +44,10 @@ const linkBankAccount = async (req, res) => {
 
     try {
         const { resource } = await container.items.create(newBankAccount);
-        console.log("Cuenta bancaria vinculada con éxito");  // Log
+        console.log("Cuenta bancaria vinculada con éxito");
         res.status(201).send('Cuenta bancaria vinculada con éxito.');
     } catch (error) {
-        console.error("Error al vincular la cuenta bancaria:", error);  // Log
+        console.error("Error al vincular la cuenta bancaria:", error);
         if (error.code === 409) {
             res.status(409).send('La cuenta bancaria ya existe.');
         } else {
@@ -43,6 +55,7 @@ const linkBankAccount = async (req, res) => {
         }
     }
 };
+
 
 
 // Función para obtener todas las cuentas bancarias vinculadas (Leer todas)
@@ -115,7 +128,7 @@ module.exports = {
     validateBankAccount   // Validaciones exportadas para uso en rutas
 }; 
 
-// Podrías también validar contra una lista blanca de bancos
+// También validar contra una lista blanca de bancos
 // const allowedBanks = ['Bank1', 'Bank2', 'Bank3'];
 // if (!allowedBanks.includes(bankName)) {
 //     return res.status(400).json({ success: false, message: 'Banco no permitido.' });

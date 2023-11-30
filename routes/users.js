@@ -64,7 +64,10 @@ router.post(
 );
 
 // Ruta para obtener el perfil del usuario
-router.get('/profile', verifyToken, usersController.getProfile);  // Utiliza el middleware 'verifyToken' para proteger esta ruta
+router.get('/profile', verifyToken, (req, res, next) => {
+    console.log('Ruta de perfil accedida');
+    next();
+}, usersController.getProfile);
 
 // Exportar el router para usarlo en otros archivos
 module.exports = router; 

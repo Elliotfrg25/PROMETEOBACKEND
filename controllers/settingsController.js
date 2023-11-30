@@ -26,9 +26,13 @@ const getSettings = async (req, res) => {
     console.log(`UserID: ${userId}`);
 
     const querySpec = {
-        query: 'SELECT * FROM Usuarios u WHERE u.id = @id',
+        query: 'SELECT * FROM c WHERE c.id = @id',
         parameters: [{ name: '@id', value: userId }],
     };
+
+    
+
+
 
     try {
         console.log("Intentando consultar la base de datos");
@@ -37,14 +41,19 @@ const getSettings = async (req, res) => {
 
         const user = resources[0];
         if (!user) {
+            console.log("Usuario no encontrado en la base de datos");
             return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
         }
+        console.log("Usuario encontrado, devolviendo configuraciones");
         res.status(200).json({ success: true, settings: user.settings || {} });
     } catch (error) {
-        console.error("Error al consultar la base de datos: ", error);
+        console.error("Tipo de Error:", error.name);
+        console.error("Mensaje de Error:", error.message);
         res.status(500).json({ success: false, message: 'Error al obtener las configuraciones' });
     }
 };
+
+
 
 // Función para actualizar las configuraciones del usuario
 const updateSettings = async (req, res) => {
@@ -57,9 +66,10 @@ const updateSettings = async (req, res) => {
         const newSettings = req.body;
 
         const querySpec = {
-            query: 'SELECT * FROM Usuarios u WHERE u.id = @id',
+            query: 'SELECT * FROM c WHERE c.id = @id',
             parameters: [{ name: '@id', value: userId }],
         };
+
         const { resources } = await container.items.query(querySpec).fetchAll();
         const user = resources[0];
 
@@ -73,7 +83,8 @@ const updateSettings = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Configuraciones actualizadas con éxito' });
     } catch (error) {
-        console.error(error);
+        console.error("Tipo de Error:", error.name);
+        console.error("Mensaje de Error:", error.message);
         res.status(500).json({ success: false, message: 'Error al actualizar las configuraciones' });
     }
 };
@@ -90,7 +101,8 @@ const createSettings = async (req, res) => {
         const { resource } = await container.items.create(user);
         res.status(201).json({ success: true, settings: resource.settings });
     } catch (error) {
-        console.error(error);
+        console.error("Tipo de Error:", error.name);
+        console.error("Mensaje de Error:", error.message);
         res.status(500).json({ success: false, message: 'Error al crear las configuraciones' });
     }
 };
@@ -102,7 +114,8 @@ const deleteSettings = async (req, res) => {
         await container.item(userId).delete();
         res.status(200).json({ success: true, message: 'Configuraciones eliminadas con éxito' });
     } catch (error) {
-        console.error(error);
+        console.error("Tipo de Error:", error.name);
+        console.error("Mensaje de Error:", error.message);
         res.status(500).json({ success: false, message: 'Error al eliminar las configuraciones' });
     }
 };
@@ -115,6 +128,8 @@ module.exports = {
     deleteSettings,
     validateSettings
 };
+
+
 
 
  

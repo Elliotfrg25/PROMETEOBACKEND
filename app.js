@@ -65,7 +65,7 @@ app.get('/', (req, res) => {
     res.send('Prometeo Backend está en funcionamiento!');
 });
 
-app.use('/api/', apiLimiter);
+//app.use('/api/', apiLimiter);
 
 // Rutas de la API
 app.use('/api/users', userRoutes);
@@ -87,7 +87,3 @@ app.listen(port, () => {
 });
 
 module.exports = app;
-
-
-
-

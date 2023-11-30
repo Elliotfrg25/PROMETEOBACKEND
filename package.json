@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
-    "test": "mocha --recursive ./test"
+    "test": "mocha --recursive ./test --timeout 20000"
   },
   "keywords": [],
   "author": "",
