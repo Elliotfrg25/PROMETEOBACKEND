@@ -22,6 +22,16 @@ jobs:
           node-version: '18.x'
 
       - name: npm install, build, and test
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          COSMOS_DB_ENDPOINT: ${{ secrets.COSMOS_DB_ENDPOINT }}
+          COSMOS_DB_KEY: ${{ secrets.COSMOS_DB_KEY }}
+          COSMOS_DB_DATABASE_ID: ${{ secrets.COSMOS_DB_DATABASE_ID }}
+          COSMOS_DB_CONTAINER_ID: ${{ secrets.COSMOS_DB_CONTAINER_ID }}
+          EXCHANGE_RATE_API_KEY: ${{ secrets.EXCHANGE_RATE_API_KEY }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
         run: |
           npm install
           npm run build --if-present
