@@ -51,7 +51,7 @@ jobs:
     needs: build
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      url: 'https://prometeoremitly.azurewebsites.net'  # Ajusta con la URL real de tu aplicación en Azure
     
     steps:
       - name: Download artifact from build job
@@ -69,4 +69,4 @@ jobs:
           app-name: 'prometeoremitly'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1B311639EAAC442982A2FBEBC00D4115 }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
