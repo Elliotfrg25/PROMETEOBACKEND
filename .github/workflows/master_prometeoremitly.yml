@@ -49,9 +49,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: 'https://prometeoremitly.azurewebsites.net'  # Ajusta con la URL real de tu aplicación en Azure
+    
     
     steps:
       - name: Download artifact from build job

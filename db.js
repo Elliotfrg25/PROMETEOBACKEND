@@ -39,7 +39,7 @@ try {
 }
 
 // Exportar el cliente para que pueda ser utilizado en otros archivos del proyecto.
-module.exports = { CosmosClient: client };
+module.exports = { client };  // Solo exportamos el cliente aquí
 
 // Función para probar la conexión a la base de datos.
 // Esta función ha sido comentada para evitar su ejecución automática.
@@ -72,4 +72,4 @@ async function testConnection() {
 }
 
 // Descomentar la siguiente línea para ejecutar la prueba de conexión.
-// testConnection();
+// testConnection();*/
