@@ -1,4 +1,4 @@
-//db.js
+// db.js
 
 // Importar el módulo dotenv para gestionar variables de entorno.
 require('dotenv').config();
@@ -26,15 +26,20 @@ const { CosmosClient } = require('@azure/cosmos');
 // LOG: Inicializando el cliente de CosmosDB
 console.log('Inicializando el cliente de CosmosDB');
 
-// Inicializar el cliente de CosmosDB con los datos de conexión.
-const client = new CosmosClient({ endpoint, key });
-
-// LOG: Cliente de CosmosDB inicializado
-console.log('Cliente de CosmosDB inicializado exitosamente');
+// Manejo de errores en la inicialización del cliente de CosmosDB.
+let client;
+try {
+    client = new CosmosClient({ endpoint, key });
+    // LOG: Cliente de CosmosDB inicializado
+    console.log('Cliente de CosmosDB inicializado exitosamente');
+} catch (error) {
+    // LOG: Error al inicializar el cliente
+    console.error('Error al inicializar el cliente de CosmosDB:', error.message);
+    process.exit(1); // Terminar el proceso si la inicialización falla
+}
 
 // Exportar el cliente para que pueda ser utilizado en otros archivos del proyecto.
 module.exports = { CosmosClient: client };
-
 
 // Función para probar la conexión a la base de datos.
 // Esta función ha sido comentada para evitar su ejecución automática.
@@ -68,8 +73,3 @@ async function testConnection() {
 
 // Descomentar la siguiente línea para ejecutar la prueba de conexión.
 // testConnection();
-*/
- 
-
-
-

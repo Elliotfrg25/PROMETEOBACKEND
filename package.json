@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
-    "test": "mocha --recursive ./test --timeout 20000"
+    "test": "if [ \"$NODE_ENV\" != \"production\" ]; then mocha --recursive ./test --timeout 20000; else echo 'Tests are disabled in production'; fi"
   },
   "keywords": [],
   "author": "",
