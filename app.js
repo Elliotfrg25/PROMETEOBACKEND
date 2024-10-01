@@ -1,5 +1,3 @@
-// app.js
-
 // Carga las variables de entorno desde el archivo .env
 require('dotenv').config();
 // Inicializa la conexión a la base de datos
@@ -12,6 +10,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const path = require('path');  // Importamos 'path' para manejar rutas del sistema de archivos
 
 // Importaciones de rutas
 const userRoutes = require('./routes/users');
@@ -65,8 +64,6 @@ app.get('/', (req, res) => {
     res.send('Prometeo Backend está en funcionamiento!');
 });
 
-//app.use('/api/', apiLimiter);
-
 // Rutas de la API
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
@@ -74,6 +71,14 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/currency', currencyRoutes);
 app.use('/api/bank-accounts', bankAccountRoutes);
+
+// Sirviendo los archivos estáticos del frontend (generados en la carpeta 'build')
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Cualquier ruta que no coincida con las anteriores (APIs), envía el index.html del frontend
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+});
 
 // Middleware para manejo de errores no capturados
 app.use((err, req, res, next) => {
