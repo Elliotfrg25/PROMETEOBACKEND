@@ -1,17 +1,9 @@
-//controllers/banckAccountControllers.js
+// controllers/bankAccountControllers.js
 
 // Importaciones necesarias
-const { CosmosClient } = require('../db');
+const { getContainer } = require('../db');  // Usamos getContainer en lugar de CosmosClient directamente
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-
-// Configuración de CosmosDB
-const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
-const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
-
-// Resto de tu configuración
-const container = CosmosClient.database(databaseId).container(containerId);
-
 
 // Función para vincular una nueva cuenta bancaria (Crear)
 const linkBankAccount = async (req, res) => {
@@ -46,6 +38,7 @@ const linkBankAccount = async (req, res) => {
     };
 
     try {
+        const container = await getContainer(); // Obtenemos el contenedor de CosmosDB
         const { resource } = await container.items.create(newBankAccount);
         console.log("Cuenta bancaria vinculada con éxito");
         res.status(201).send('Cuenta bancaria vinculada con éxito.');
@@ -59,8 +52,6 @@ const linkBankAccount = async (req, res) => {
     }
 };
 
-
-
 // Función para obtener todas las cuentas bancarias vinculadas (Leer todas)
 const getLinkedAccounts = async (req, res) => {
     const userId = req.user._id;
@@ -70,6 +61,7 @@ const getLinkedAccounts = async (req, res) => {
     };
 
     try {
+        const container = await getContainer(); // Obtenemos el contenedor de CosmosDB
         const { resources } = await container.items.query(querySpec).fetchAll();
         res.status(200).json(resources);
     } catch (error) {
@@ -80,11 +72,16 @@ const getLinkedAccounts = async (req, res) => {
 // Función para obtener una cuenta bancaria específica por ID (Leer una)
 const getAccountById = async (req, res) => {
     const id = req.params.id;
-    const { resource } = await container.item(id).read();
-    if (resource) {
-        res.status(200).json({ success: true, bankAccount: resource });
-    } else {
-        res.status(404).json({ success: false, message: 'Cuenta no encontrada' });
+    try {
+        const container = await getContainer(); // Obtenemos el contenedor de CosmosDB
+        const { resource } = await container.item(id).read();
+        if (resource) {
+            res.status(200).json({ success: true, bankAccount: resource });
+        } else {
+            res.status(404).json({ success: false, message: 'Cuenta no encontrada' });
+        }
+    } catch (error) {
+        res.status(500).send('Error al obtener la cuenta bancaria.');
     }
 };
 
@@ -93,25 +90,31 @@ const updateAccountById = async (req, res) => {
     const id = req.params.id;
     const { bankName, accountNumber } = req.body;
 
-    const { resource } = await container.item(id).read();
-    if (resource) {
-        resource.bankName = bankName;
-        resource.accountNumber = accountNumber;
-        await container.item(id).replace(resource);
-        res.status(200).json({ success: true, message: 'Cuenta actualizada' });
-    } else {
-        res.status(404).json({ success: false, message: 'Cuenta no encontrada' });
+    try {
+        const container = await getContainer(); // Obtenemos el contenedor de CosmosDB
+        const { resource } = await container.item(id).read();
+        if (resource) {
+            resource.bankName = bankName;
+            resource.accountNumber = accountNumber;
+            await container.item(id).replace(resource);
+            res.status(200).json({ success: true, message: 'Cuenta actualizada' });
+        } else {
+            res.status(404).json({ success: false, message: 'Cuenta no encontrada' });
+        }
+    } catch (error) {
+        res.status(500).send('Error al actualizar la cuenta bancaria.');
     }
 };
 
 // Función para eliminar una cuenta bancaria específica por ID (Eliminar)
 const deleteAccountById = async (req, res) => {
     const id = req.params.id;
-    const { resource } = await container.item(id).delete();
-    if (resource) {
+    try {
+        const container = await getContainer(); // Obtenemos el contenedor de CosmosDB
+        await container.item(id).delete();
         res.status(200).json({ success: true, message: 'Cuenta eliminada' });
-    } else {
-        res.status(404).json({ success: false, message: 'Cuenta no encontrada' });
+    } catch (error) {
+        res.status(500).send('Error al eliminar la cuenta bancaria.');
     }
 };
 
@@ -129,10 +132,4 @@ module.exports = {
     updateAccountById,    // Nueva función
     deleteAccountById,    // Nueva función
     validateBankAccount   // Validaciones exportadas para uso en rutas
-}; 
-
-// También validar contra una lista blanca de bancos
-// const allowedBanks = ['Bank1', 'Bank2', 'Bank3'];
-// if (!allowedBanks.includes(bankName)) {
-//     return res.status(400).json({ success: false, message: 'Banco no permitido.' });
-// }
+};
