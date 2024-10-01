@@ -1,23 +1,16 @@
-//controllers/users.js
+// controllers/users.js
 
 // Importar módulos necesarios
-const { CosmosClient } = require('../db'); // Cliente de CosmosDB
+const { getContainer } = require('../db'); // Función para obtener el contenedor de CosmosDB
 const jwt = require('jsonwebtoken'); // Para manejar JSON Web Tokens
 const bcrypt = require('bcrypt'); // Para el hash de las contraseñas
 const { validationResult } = require('express-validator'); // Para validar el cuerpo de la petición
 
-// Configuración de CosmosDB
-const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
-const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
-
-// Resto de tu configuración
-const container = CosmosClient.database(databaseId).container(containerId);
-
-
 // Función para verificar si un ID ya existe en la base de datos
 const checkIfIdExists = async (idToCheck) => {
-    // LOG: Añadiendo logging aquí
     console.log(`Verificando si el ID ${idToCheck} ya existe`);
+
+    const container = await getContainer(); // Obtenemos el contenedor
 
     const querySpec = {
         query: "SELECT * from c WHERE c.id = @id",
@@ -50,18 +43,17 @@ const authenticateUser = async (req, res, next) => {
 // Función para registrar usuarios
 const register = async (req, res) => {
     try {
-        // LOG: Añadiendo logging aquí
         console.log('Intento de registro de usuario');
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            console.log(`Entrando al bloque de errores de validación: ${JSON.stringify(errors.array())}`);
+            console.log(`Errores de validación: ${JSON.stringify(errors.array())}`);
             return res.status(422).json({ errors: errors.array() });
         }
 
         const idExists = await checkIfIdExists(req.body.email);
         if (idExists) {
-            return res.status(400).send("ID ya existe");
+            return res.status(400).send("El ID ya existe");
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -73,10 +65,12 @@ const register = async (req, res) => {
             password: hashedPassword
         };
 
+        const container = await getContainer(); // Obtenemos el contenedor
+
         const { resource } = await container.items.create(newUser);
         return res.status(201).send('Usuario registrado con éxito.');
     } catch (error) {
-        console.log(`Error inesperado en el registro: ${error}`);
+        console.log(`Error en el registro: ${error}`);
         return res.status(500).send('Error inesperado.');
     }
 };
@@ -85,9 +79,9 @@ const register = async (req, res) => {
 const getUserById = async (req, res) => {
     const { id } = req.params;
     try {
-        // LOG: Añadiendo logging aquí
         console.log(`Leyendo usuario con ID ${id}`);
 
+        const container = await getContainer(); // Obtenemos el contenedor
         const { resource } = await container.item(id).read();
         res.status(200).json(resource);
     } catch (error) {
@@ -100,9 +94,9 @@ const updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email } = req.body;
     try {
-        // LOG: Añadiendo logging aquí
         console.log(`Actualizando usuario con ID ${id}`);
 
+        const container = await getContainer(); // Obtenemos el contenedor
         const { resource } = await container.item(id).replace({ id, name, email });
         res.status(200).json(resource);
     } catch (error) {
@@ -114,9 +108,9 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
     const { id } = req.params;
     try {
-        // LOG: Añadiendo logging aquí
         console.log(`Eliminando usuario con ID ${id}`);
 
+        const container = await getContainer(); // Obtenemos el contenedor
         await container.item(id).delete();
         res.status(204).json({});
     } catch (error) {
@@ -127,8 +121,9 @@ const deleteUser = async (req, res) => {
 // Función para obtener el perfil del usuario
 const getProfile = async (req, res) => {
     console.log('Obteniendo perfil del usuario');
-    const userId = req.user.id; // Usar req.user.id en lugar de req.userId
+    const userId = req.user.id;
     try {
+        const container = await getContainer(); // Obtenemos el contenedor
         const { resource } = await container.item(userId).read();
         res.status(200).send(resource);
     } catch (error) {
@@ -136,13 +131,13 @@ const getProfile = async (req, res) => {
     }
 };
 
-
 // Función para iniciar sesión
 const login = async (req, res) => {
     console.log('Intento de inicio de sesión');
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     try {
+        const container = await getContainer(); // Obtenemos el contenedor
         const { resource } = await container.item(req.body.email).read();
         const user = resource;
         const validPassword = await bcrypt.compare(req.body.password, user.password);
@@ -150,7 +145,7 @@ const login = async (req, res) => {
         const token = jwt.sign({ _id: user.id }, process.env.SECRET_KEY);
         res.send({ token });
     } catch (error) {
-        console.log(`Error inesperado en el inicio de sesión: ${error}`);
+        console.log(`Error en el inicio de sesión: ${error}`);
         res.status(500).send('Error al iniciar sesión.');
     }
 };
@@ -165,11 +160,3 @@ module.exports = {
     updateUser,
     deleteUser
 };
-
-
-
-
-
-
-
-

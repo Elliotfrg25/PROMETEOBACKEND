@@ -6,19 +6,17 @@ require('dotenv').config();
 // Leer las variables de entorno para la conexión a CosmosDB.
 const endpoint = process.env.COSMOS_DB_ENDPOINT;
 const key = process.env.COSMOS_DB_KEY;
+const databaseId = process.env.COSMOS_DB_DATABASE_ID;
+const containerId = process.env.COSMOS_DB_CONTAINER_ID;
 
 // LOG: Verificando la presencia de variables de entorno
 console.log('Verificando variables de entorno para la conexión a CosmosDB');
 
 // Comprobar si las variables de entorno están definidas.
-if (!endpoint || !key) {
-    // LOG: Error de configuración
-    console.error('COSMOS_DB_ENDPOINT y COSMOS_DB_KEY deben estar definidos');
-    throw new Error("COSMOS_DB_ENDPOINT and COSMOS_DB_KEY must be defined.");
+if (!endpoint || !key || !databaseId || !containerId) {
+    console.error('COSMOS_DB_ENDPOINT, COSMOS_DB_KEY, COSMOS_DB_DATABASE_ID y COSMOS_DB_CONTAINER_ID deben estar definidos');
+    throw new Error("Faltan variables de entorno requeridas.");
 }
-
-// LOG: Variables de entorno correctas, procediendo a la conexión
-console.log('Variables de entorno correctas, procediendo a la conexión');
 
 // Importar el cliente CosmosDB de la biblioteca de Azure.
 const { CosmosClient } = require('@azure/cosmos');
@@ -26,20 +24,31 @@ const { CosmosClient } = require('@azure/cosmos');
 // LOG: Inicializando el cliente de CosmosDB
 console.log('Inicializando el cliente de CosmosDB');
 
-// Manejo de errores en la inicialización del cliente de CosmosDB.
+// Inicialización del cliente de CosmosDB.
 let client;
 try {
     client = new CosmosClient({ endpoint, key });
-    // LOG: Cliente de CosmosDB inicializado
     console.log('Cliente de CosmosDB inicializado exitosamente');
 } catch (error) {
-    // LOG: Error al inicializar el cliente
     console.error('Error al inicializar el cliente de CosmosDB:', error.message);
     process.exit(1); // Terminar el proceso si la inicialización falla
 }
 
-// Exportar el cliente para que pueda ser utilizado en otros archivos del proyecto.
-module.exports = { client };  // Solo exportamos el cliente aquí
+// Función para obtener el contenedor de CosmosDB
+async function getContainer() {
+    try {
+        const database = client.database(databaseId);
+        const container = database.container(containerId);
+        return container;
+    } catch (error) {
+        console.error('Error al obtener el contenedor:', error.message);
+        throw error;
+    }
+}
+
+// Exportar la función para obtener el contenedor
+module.exports = { getContainer };
+
 
 // Función para probar la conexión a la base de datos.
 // Esta función ha sido comentada para evitar su ejecución automática.
