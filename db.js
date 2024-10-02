@@ -9,6 +9,12 @@ const key = process.env.COSMOS_DB_KEY;
 const databaseId = process.env.COSMOS_DB_DATABASE_ID;
 const containerId = process.env.COSMOS_DB_CONTAINER_ID;
 
+// Verificación adicional para ver las variables de entorno en los logs
+console.log('COSMOS_DB_ENDPOINT:', process.env.COSMOS_DB_ENDPOINT || 'No definida');
+console.log('COSMOS_DB_KEY:', process.env.COSMOS_DB_KEY ? 'Definida' : 'No definida'); // No imprimir el valor de la clave por seguridad
+console.log('COSMOS_DB_DATABASE_ID:', process.env.COSMOS_DB_DATABASE_ID || 'No definida');
+console.log('COSMOS_DB_CONTAINER_ID:', process.env.COSMOS_DB_CONTAINER_ID || 'No definida');
+
 // LOG: Verificando la presencia de variables de entorno
 console.log('Verificando variables de entorno para la conexión a CosmosDB');
 
