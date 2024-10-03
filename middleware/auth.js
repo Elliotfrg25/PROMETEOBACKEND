@@ -29,7 +29,7 @@ exports.verifyToken = (req, res, next) => {
         req.userRole = decoded.role;
         next();
     });
-};
+}; 
  
  
 

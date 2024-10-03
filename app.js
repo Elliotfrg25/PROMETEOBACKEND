@@ -14,7 +14,7 @@ const path = require('path');  // Importamos 'path' para manejar rutas del siste
 
 // Inicialización de Express fuera de la función asíncrona
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8080;
 
 // Middlewares
 app.use(helmet());  // Cabeceras de seguridad
