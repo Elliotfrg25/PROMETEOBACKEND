@@ -1,16 +1,8 @@
 // settingsController.js
 
 // Importaciones necesarias
-const { CosmosClient } = require('../db');
+const { getContainer } = require('../db');
 const { validationResult, check } = require('express-validator');
-
-// Configuración de CosmosDB
-const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
-const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
-
-// Resto de tu configuración
-const container = CosmosClient.database(databaseId).container(containerId);
-
 
 // Validaciones para los campos de configuración
 const validateSettings = [
@@ -33,12 +25,9 @@ const getSettings = async (req, res) => {
         parameters: [{ name: '@id', value: userId }],
     };
 
-    
-
-
-
     try {
         console.log("Intentando consultar la base de datos");
+        const container = await getContainer();  // Obtener el contenedor dentro de la función async
         const { resources } = await container.items.query(querySpec).fetchAll();
         console.log(`Recursos obtenidos: ${JSON.stringify(resources)}`);
 
@@ -56,8 +45,6 @@ const getSettings = async (req, res) => {
     }
 };
 
-
-
 // Función para actualizar las configuraciones del usuario
 const updateSettings = async (req, res) => {
     const errors = validationResult(req);
@@ -73,6 +60,7 @@ const updateSettings = async (req, res) => {
             parameters: [{ name: '@id', value: userId }],
         };
 
+        const container = await getContainer();  // Obtener el contenedor dentro de la función async
         const { resources } = await container.items.query(querySpec).fetchAll();
         const user = resources[0];
 
@@ -97,6 +85,7 @@ const createSettings = async (req, res) => {
     const newSettings = req.body;
     const userId = req.userId;
     try {
+        const container = await getContainer();  // Obtener el contenedor dentro de la función async
         const user = {
             id: userId,
             settings: newSettings
@@ -114,6 +103,7 @@ const createSettings = async (req, res) => {
 const deleteSettings = async (req, res) => {
     const userId = req.userId;
     try {
+        const container = await getContainer();  // Obtener el contenedor dentro de la función async
         await container.item(userId).delete();
         res.status(200).json({ success: true, message: 'Configuraciones eliminadas con éxito' });
     } catch (error) {
@@ -131,6 +121,7 @@ module.exports = {
     deleteSettings,
     validateSettings
 };
+
 
 
 

@@ -3,17 +3,14 @@
 require('dotenv').config();
 
 // Importar el cliente de CosmosDB y validaciones
-const { CosmosClient } = require('../db');
+const { getContainer } = require('../db');
 const { body, validationResult } = require('express-validator');
 const axios = require('axios');
 
-// Configuración de CosmosDB
-const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
-const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
-
-// Resto de tu configuración
-const container = CosmosClient.database(databaseId).container(containerId);
-
+// Función para obtener el contenedor de CosmosDB
+const getCosmosContainer = async () => {
+    return await getContainer();
+};
 
 // Función para obtener la tasa de cambio desde una API externa
 const fetchExchangeRate = async (fromCurrency, toCurrency) => {
@@ -49,6 +46,7 @@ const getCurrentRates = async (req, res) => {
         const querySpec = {
             query: 'SELECT * FROM c WHERE c.entityType = "ExchangeRate"',
         };
+        const container = await getCosmosContainer();  // Obtenemos el contenedor dentro de la función
         const { resources } = await container.items.query(querySpec).fetchAll();
         const currentRates = resources.reduce((acc, rate) => {
             acc[`${rate.fromCurrency}_${rate.toCurrency}`] = rate.rate;
@@ -71,6 +69,7 @@ const createExchangeRate = async (req, res) => {
         rate
     };
     try {
+        const container = await getCosmosContainer();  // Obtenemos el contenedor dentro de la función
         const { resource } = await container.items.create(exchangeRate);
         res.status(201).json({ success: true, exchangeRate: resource });
     } catch (error) {
@@ -84,6 +83,7 @@ const updateExchangeRate = async (req, res) => {
     const { id } = req.params;
     const { rate } = req.body;
     try {
+        const container = await getCosmosContainer();  // Obtenemos el contenedor dentro de la función
         const oldResource = await container.item(id).read();
         const newResource = { ...oldResource.resource, rate };
         const { resource } = await container.item(id).replace(newResource);
@@ -94,11 +94,11 @@ const updateExchangeRate = async (req, res) => {
     }
 };
 
-
 // Función para eliminar una tasa de cambio
 const deleteExchangeRate = async (req, res) => {
     const { id } = req.params;
     try {
+        const container = await getCosmosContainer();  // Obtenemos el contenedor dentro de la función
         await container.item(id).delete();
         res.status(200).json({ success: true, message: 'Tasa de cambio eliminada exitosamente' });
     } catch (error) {
@@ -118,6 +118,7 @@ const validateCurrencyConversion = [
 const getExchangeRateById = async (req, res) => {
     const { id } = req.params;
     try {
+        const container = await getCosmosContainer();  // Obtenemos el contenedor dentro de la función
         const { resource } = await container.item(id).read();
         res.status(200).json(resource);
     } catch (error) {
@@ -128,6 +129,7 @@ const getExchangeRateById = async (req, res) => {
 // Listar todas las tasas de cambio
 const listExchangeRates = async (req, res) => {
     try {
+        const container = await getCosmosContainer();  // Obtenemos el contenedor dentro de la función
         const { resources } = await container.items
             .query('SELECT * FROM c WHERE c.entityType = "ExchangeRate"')
             .fetchAll();
@@ -140,38 +142,28 @@ const listExchangeRates = async (req, res) => {
 // Función para actualizar o crear tasas de cambio en la base de datos diariamente
 const updateDailyExchangeRates = async () => {
     try {
-        // Paso 1: Obtener las tasas de cambio actualizadas desde la API de ExchangeRate-API
+        const container = await getCosmosContainer();  // Obtenemos el contenedor dentro de la función
         const response = await axios.get(`https://api.exchangerate-api.com/v4/latest/USD?apiKey=${process.env.EXCHANGE_RATE_API_KEY}`);
         const newRates = response.data.rates;
 
-        // Paso 2: Iterar sobre las tasas de cambio obtenidas
         for (const [currency, rate] of Object.entries(newRates)) {
             try {
-                // Consultar si ya existe una tasa de cambio para la moneda en CosmosDB
                 const querySpec = {
                     query: `SELECT * FROM c WHERE c.entityType = "ExchangeRate" AND c.toCurrency = @currency`,
-                    parameters: [
-                        {
-                            name: '@currency',
-                            value: currency
-                        }
-                    ]
+                    parameters: [{ name: '@currency', value: currency }]
                 };
 
                 const { resources } = await container.items.query(querySpec).fetchAll();
 
-                // Caso 1: La tasa de cambio ya existe, actualízala
                 if (resources.length > 0) {
                     const id = resources[0].id;
                     const oldResource = await container.item(id).read();
                     const newResource = { ...oldResource.resource, rate };
                     await container.item(id).replace(newResource);
-                }
-                // Caso 2: La tasa de cambio no existe, créala
-                else {
+                } else {
                     const exchangeRate = {
                         entityType: 'ExchangeRate',
-                        fromCurrency: 'USD',  // Moneda base asumida como USD
+                        fromCurrency: 'USD',
                         toCurrency: currency,
                         rate
                     };
@@ -189,9 +181,8 @@ const updateDailyExchangeRates = async () => {
 // Ejecutar la función una vez al día (86400 segundos son un día)
 setInterval(updateDailyExchangeRates, 86400 * 1000);
 
-// (Tus exportaciones...)
+// Exportar las funciones
 module.exports = {
-    // CONTIENE FUNCIONES CRUD
     getExchangeRateById,
     listExchangeRates,
     convertCurrency,
@@ -202,6 +193,7 @@ module.exports = {
     validateCurrencyConversion,
     fetchExchangeRate,
     updateDailyExchangeRates
-}; 
+};
+
 
  

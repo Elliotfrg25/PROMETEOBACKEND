@@ -132,4 +132,4 @@ module.exports = {
     updateAccountById,    // Nueva función
     deleteAccountById,    // Nueva función
     validateBankAccount   // Validaciones exportadas para uso en rutas
-};
+}; 

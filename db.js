@@ -1,5 +1,3 @@
-// db.js
-
 // Importar el módulo dotenv para gestionar variables de entorno.
 require('dotenv').config();
 
@@ -10,38 +8,43 @@ const databaseId = process.env.COSMOS_DB_DATABASE_ID;
 const containerId = process.env.COSMOS_DB_CONTAINER_ID;
 
 // Verificación adicional para ver las variables de entorno en los logs
-console.log('COSMOS_DB_ENDPOINT:', process.env.COSMOS_DB_ENDPOINT || 'No definida');
-console.log('COSMOS_DB_KEY:', process.env.COSMOS_DB_KEY ? 'Definida' : 'No definida'); // No imprimir el valor de la clave por seguridad
-console.log('COSMOS_DB_DATABASE_ID:', process.env.COSMOS_DB_DATABASE_ID || 'No definida');
-console.log('COSMOS_DB_CONTAINER_ID:', process.env.COSMOS_DB_CONTAINER_ID || 'No definida');
-
-// LOG: Verificando la presencia de variables de entorno
-console.log('Verificando variables de entorno para la conexión a CosmosDB');
-
-// Comprobar si las variables de entorno están definidas.
-if (!endpoint || !key || !databaseId || !containerId) {
-    console.error('COSMOS_DB_ENDPOINT, COSMOS_DB_KEY, COSMOS_DB_DATABASE_ID y COSMOS_DB_CONTAINER_ID deben estar definidos');
-    throw new Error("Faltan variables de entorno requeridas.");
-}
+console.log('COSMOS_DB_ENDPOINT:', endpoint || 'No definida');
+console.log('COSMOS_DB_KEY:', key ? 'Definida' : 'No definida');
+console.log('COSMOS_DB_DATABASE_ID:', databaseId || 'No definida');
+console.log('COSMOS_DB_CONTAINER_ID:', containerId || 'No definida');
 
 // Importar el cliente CosmosDB de la biblioteca de Azure.
 const { CosmosClient } = require('@azure/cosmos');
 
-// LOG: Inicializando el cliente de CosmosDB
-console.log('Inicializando el cliente de CosmosDB');
+// Verificar si CosmosClient se ha importado correctamente
+console.log('CosmosClient:', CosmosClient);
 
-// Inicialización del cliente de CosmosDB.
-let client;
-try {
-    client = new CosmosClient({ endpoint, key });
-    console.log('Cliente de CosmosDB inicializado exitosamente');
-} catch (error) {
-    console.error('Error al inicializar el cliente de CosmosDB:', error.message);
-    process.exit(1); // Terminar el proceso si la inicialización falla
+// Inicialización del cliente de CosmosDB (inicializado como null inicialmente).
+let client = null;  // Se inicializa a null para evitar errores
+
+// Función para inicializar CosmosClient
+async function initializeCosmosClient() {
+    try {
+        if (!client) {  // Solo inicializar si no existe un cliente
+            client = new CosmosClient({ endpoint, key });
+            console.log('Cliente de CosmosDB inicializado exitosamente');
+        } else {
+            console.log('Cliente de CosmosDB ya estaba inicializado');
+        }
+    } catch (error) {
+        console.error('Error al inicializar el cliente de CosmosDB:', error.message);
+        throw new Error('No se pudo inicializar el cliente de CosmosDB.');
+    }
 }
 
 // Función para obtener el contenedor de CosmosDB
 async function getContainer() {
+    // Verificar si el cliente ha sido inicializado
+    if (!client) {
+        console.log('Cliente de CosmosDB no está inicializado. Iniciando cliente...');
+        await initializeCosmosClient();  // Inicializar si no está inicializado
+    }
+
     try {
         const database = client.database(databaseId);
         const container = database.container(containerId);
@@ -52,8 +55,13 @@ async function getContainer() {
     }
 }
 
-// Exportar la función para obtener el contenedor
-module.exports = { getContainer };
+// Exportar las funciones
+module.exports = { getContainer, initializeCosmosClient };
+
+
+
+
+
 
 
 // Función para probar la conexión a la base de datos.

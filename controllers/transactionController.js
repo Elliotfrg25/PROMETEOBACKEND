@@ -1,18 +1,10 @@
 // controllers/transactionController.js
 
 // Importaciones necesarias para CosmosDB, modelo de transacciones y servicios de notificación
-const { CosmosClient } = require('../db');
+const { getContainer } = require('../db');
 const transactionModel = require('../models/transaction');
 const emailService = require('../services/emailService');
-const smsService = require('../services/smsService'); 
-
-// Configuración de CosmosDB
-const databaseId = process.env.COSMOS_DB_DATABASE_ID || 'ToDoList';
-const containerId = process.env.COSMOS_DB_CONTAINER_ID || 'Items';
-
-// Resto de tu configuración
-const container = CosmosClient.database(databaseId).container(containerId);
-
+const smsService = require('../services/smsService');
 
 // Función para obtener la tasa de cambio entre dos monedas (esto es solo un ejemplo)
 const getExchangeRate = async (fromCurrency, toCurrency) => {
@@ -27,6 +19,8 @@ const makeTransaction = async (req, res) => {
         if (!senderId || !receiverId || !amount || isNaN(amount)) {
             return res.status(400).json({ success: false, message: 'Campos incompletos o inválidos' });
         }
+
+        const container = await getContainer(); // Obtener el contenedor dentro de la función async
 
         const sender = await container.item(senderId).read();
         const receiver = await container.item(receiverId).read();
@@ -98,10 +92,12 @@ const getTransactionHistory = async (req, res) => {
     }
 };
 
-// Nueva función para leer una transacción específica
+// Función para leer una transacción específica
 const getTransaction = async (req, res) => {
     const transactionId = req.params.id;
     try {
+        const container = await getContainer(); // Obtener el contenedor dentro de la función async
+
         const transaction = await container.item(transactionId).read();
         if (!transaction) {
             return res.status(404).json({ success: false, message: 'Transacción no encontrada' });
@@ -113,11 +109,13 @@ const getTransaction = async (req, res) => {
     }
 };
 
-// Nueva función para actualizar una transacción
+// Función para actualizar una transacción
 const updateTransaction = async (req, res) => {
     const transactionId = req.params.id;
     const newDetails = req.body;
     try {
+        const container = await getContainer(); // Obtener el contenedor dentro de la función async
+
         const transaction = await container.item(transactionId).read();
         if (!transaction) {
             return res.status(404).json({ success: false, message: 'Transacción no encontrada' });
@@ -131,10 +129,12 @@ const updateTransaction = async (req, res) => {
     }
 };
 
-// Nueva función para eliminar una transacción
+// Función para eliminar una transacción
 const deleteTransaction = async (req, res) => {
     const transactionId = req.params.id;
     try {
+        const container = await getContainer(); // Obtener el contenedor dentro de la función async
+
         await container.item(transactionId).delete();
         res.status(200).json({ success: true, message: 'Transacción eliminada con éxito' });
     } catch (error) {
@@ -151,6 +151,7 @@ module.exports = {
     updateTransaction,
     deleteTransaction
 };
+
  
 
 
