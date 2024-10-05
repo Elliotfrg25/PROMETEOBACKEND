@@ -1,5 +1,6 @@
 // Carga las variables de entorno desde el archivo .env
 require('dotenv').config();
+
 // Inicializa la conexión a la base de datos y maneja errores de inicialización
 const { initializeCosmosClient } = require('./db');
 
@@ -10,19 +11,19 @@ const morgan = require('morgan');
 const cors = require('cors');
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-const path = require('path');  // Importamos 'path' para manejar rutas del sistema de archivos
+const path = require('path'); // Para manejar rutas del sistema de archivos
 
 // Inicialización de Express fuera de la función asíncrona
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 8080; // Asegúrate de usar el puerto que Azure proporciona
 
 // Middlewares
-app.use(helmet());  // Cabeceras de seguridad
-app.use(cors());  // Habilitar CORS
-app.use(express.json()); // Parseo del cuerpo JSON
-app.use(morgan('combined'));  // Registro de solicitudes HTTP
+app.use(helmet()); // Mejora la seguridad con cabeceras de seguridad
+app.use(cors()); // Habilita CORS para permitir solicitudes de otros dominios
+app.use(express.json()); // Parseo del cuerpo de la solicitud en JSON
+app.use(morgan('combined')); // Log de solicitudes HTTP
 
-// Configuración de Swagger
+// Configuración de Swagger para la documentación de la API
 const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
@@ -32,60 +33,57 @@ const swaggerOptions = {
             contact: {
                 name: "Soporte técnico"
             },
-            servers: ["http://localhost:5000"]
+            servers: ["http://localhost:5000"] // Cambia esto si usas un dominio en producción
         }
     },
     apis: ["./routes/*.js"]
 };
 
-// Inicialización de Swagger
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Verificar variables de entorno críticas antes de iniciar el servidor
 if (!process.env.SECRET_KEY) {
     console.error("Falta la variable de entorno SECRET_KEY. Terminando...");
-    process.exit(1);
+    process.exit(1); // Termina el proceso si falta SECRET_KEY
 }
 
+// Importar y configurar las rutas de la API
+const userRoutes = require('./routes/users');
+const adminRoutes = require('./routes/admin');
+const transactionRoutes = require('./routes/transactionRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+const currencyRoutes = require('./routes/currencyRoutes');
+const bankAccountRoutes = require('./routes/bankAccountRoutes');
+
 // Rutas de la API
-app.use('/api/users', require('./routes/users'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/transactions', require('./routes/transactionRoutes'));
-app.use('/api/settings', require('./routes/settingsRoutes'));
-app.use('/api/currency', require('./routes/currencyRoutes'));
-app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
+app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/currency', currencyRoutes);
+app.use('/api/bank-accounts', bankAccountRoutes);
 
-// Sirviendo los archivos estáticos del frontend (generados en la carpeta 'build')
-app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-// Cualquier ruta que no coincida con las anteriores (APIs), envía el index.html del frontend
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-});
-
-// Ruta de Swagger
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
-// Middleware para manejo de errores no capturados
+// Middleware para manejar errores no capturados
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('¡Algo salió mal!');
 });
 
-// Intentar inicializar la conexión a CosmosDB
+// Intentar inicializar la conexión a CosmosDB y arrancar el servidor
 (async () => {
     try {
-        await initializeCosmosClient();  // Asegura que el cliente CosmosDB esté listo antes de iniciar el servidor
+        await initializeCosmosClient(); // Asegura que el cliente CosmosDB esté listo antes de iniciar el servidor
         console.log('Conexión a CosmosDB inicializada exitosamente');
 
-        // Iniciar el servidor en el puerto especificado solo después de la inicialización exitosa de CosmosDB
+        // Iniciar el servidor solo después de la inicialización exitosa de CosmosDB
         app.listen(port, () => {
             console.log(`Servidor corriendo en http://localhost:${port}`);
         });
 
     } catch (error) {
         console.error('Error al inicializar la conexión a CosmosDB:', error.message);
-        process.exit(1);  // Termina el proceso si falla la conexión
+        process.exit(1); // Termina el proceso si falla la conexión a la base de datos
     }
 })();
 
